@@ -6,7 +6,7 @@ from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
-from pydantic import BaseModel, Field, conlist, conint
+from pydantic import BaseModel, Field, conlist, conint, validator
 
 
 class Size(Enum):
@@ -15,7 +15,7 @@ class Size(Enum):
     big = "big"
 
 
-class Status(Enum):
+class StatusEnum(Enum):
     created = "created"
     progress = "progress"
     cancelled = "cancelled"
@@ -31,6 +31,11 @@ class OrderItemSchema(BaseModel):
     # strict=True value passed should be > 1
     quantity: Optional[conint(ge=1, strict=True)] = 1
 
+    @validator("quantity")
+    def quantity_non_nullable(cls, value):
+        assert value is not None, "quantity may not be None"
+        return value
+
 
 class CreateOrderSchema(BaseModel):
     order: conlist(OrderItemSchema, min_items=1)
@@ -39,7 +44,7 @@ class CreateOrderSchema(BaseModel):
 class GetOrderSchema(CreateOrderSchema):
     id: UUID
     created: datetime
-    status: Status
+    status: StatusEnum
 
 
 class GetOrdersSchema(BaseModel):
